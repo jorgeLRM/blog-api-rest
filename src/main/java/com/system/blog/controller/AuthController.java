@@ -4,8 +4,10 @@ import com.system.blog.dto.LoginDTO;
 import com.system.blog.dto.RecordDTO;
 import com.system.blog.model.Role;
 import com.system.blog.model.User;
+import com.system.blog.repository.JWTAuthResponseDTO;
 import com.system.blog.repository.RoleRepository;
 import com.system.blog.repository.UserRepository;
+import com.system.blog.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,12 +39,17 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     @PostMapping("login")
-    public ResponseEntity<String> authenticateUser(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<JWTAuthResponseDTO> authenticateUser(@RequestBody LoginDTO loginDTO) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsernameOrEmail(), loginDTO.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("You have started session successfully", HttpStatus.OK);
+        // get jwtTokenProvider
+        String token = jwtTokenProvider.createToken(authentication);
+
+        return ResponseEntity.ok(new JWTAuthResponseDTO(token));
     }
 
     @PostMapping("/register")
